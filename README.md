@@ -11,3 +11,7 @@ https://www.adafruit.com/product/2276
 
 Python bindings:<br>
 https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/bindings/python
+
+## Schematic
+
+![](art/schematic.jpg)
