@@ -12,6 +12,9 @@ https://www.adafruit.com/product/2276
 Python bindings:<br>
 https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/bindings/python
 
+5V "Buck" Converter:<br>
+https://www.adafruit.com/product/1385
+
 ## Schematic
 
 ![](art/schematic.jpg)
