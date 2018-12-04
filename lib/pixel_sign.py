@@ -74,15 +74,5 @@ class SignFrame:
     
     def get_binary(self):
         # No translations needed
-        return self._pixels
+        return bytes(self._pixels)
 
-
-frame = SignFrame()
-for i in range(32):
-    frame.set_pixel(i,i,i)
-
-b = frame.get_binary()
-
-frame2 = SignFrame(frame.to_string())
-
-print(frame2.to_string())         

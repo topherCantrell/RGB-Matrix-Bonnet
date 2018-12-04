@@ -1,4 +1,4 @@
-import pixel_hat
+import pixel_sign
 
 color_cursor = 0
 
@@ -45,8 +45,10 @@ def readMovie(filename):
         "name"   : ''
     }
     
-    i = filename.index(".")
-    ret["name"] = filename[0:i]
+    i = filename.rindex('/')
+    g = filename[i+1:]
+    i = g.index(".")
+    ret["name"] = g[0:i]    
     
     if len(ret["name"])>15:
         raise Exception("Name must be less than 16 characters: "+ret["name"])
@@ -67,7 +69,7 @@ def readMovie(filename):
     fs = ''
     while True:
         if pos==len(lines) or lines[pos][0]=='%':            
-            ret["frames"].append(pixel_hat.HatFrame(fs))            
+            ret["frames"].append(pixel_sign.SignFrame(fs))            
             fs = ''
             pos+=1
         if pos>len(lines):
@@ -88,24 +90,19 @@ def fourByteNumber(number):
 
 if __name__=='__main__':
     
-    #ROOT = "../FLL2018"
-    ROOT = "../FRC2018"
-        
+    ROOT = "../Parade2018"
+            
     master = readLines("%s/master.txt" % (ROOT,))
     
     movies = []
     for m in master:
         movies.append(readMovie("%s/%s" % (ROOT,m)))
         
-    binA = open("%s/a.bin" % (ROOT,),"wb")
-    binB = open("%s/b.bin" % (ROOT,),"wb")
+    binA = open("%s/a.bin" % (ROOT,),"wb")   
     
     preA = b'2018\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
     binA.write(preA)
-    
-    preB = b'2018\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02'
-    binB.write(preB)
-    
+        
     currentSector = 1
     for ent in range(0,31):   
         dt = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
@@ -120,20 +117,17 @@ if __name__=='__main__':
             dt = dt + fourByteNumber(currentSector);        
             currentSector = currentSector + 3 + len(m["frames"])*2;    
         binA.write(dt)
-        binB.write(dt)
-        
+                
     for m in movies:
-        print(m["name"])
         # Write 1 sector info NUMFRAMES,DELAY
         dt = fourByteNumber(len(m["frames"]))
         binA.write(dt)
-        binB.write(dt)
+        
         dt = fourByteNumber(m["delay"])
         binA.write(dt);
-        binB.write(dt);    
+           
         for x in range(0,512-8):
-            binA.write(b'\x00');
-            binB.write(b'\x00');
+            binA.write(b'\x00');            
         
         # Write 2 sectors colors
         for x in range(0,256):
@@ -141,20 +135,13 @@ if __name__=='__main__':
                 dt = fourByteNumber(m["colors"][x])
             else:
                 dt = fourByteNumber(0)
-            binA.write(dt);
-            binB.write(dt);
+            binA.write(dt);            
             
         for f in m["frames"]:
-            d = f.get_binary(True)
-            if len(d)!=1024:
+            d = f.get_binary()
+            if len(d)!=2048:
                 raise Exception("Size")
-            binA.write(d)
-            d = f.get_binary(False)
-            if len(d)!=1024:
-                raise Exception("Size "+str(len(d)))
-            binB.write(d)
+            binA.write(d)          
     
     binA.flush()
-    binA.close()
-    binB.flush()
-    binB.close()
+    binA.close()    

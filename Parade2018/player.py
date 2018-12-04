@@ -37,6 +37,7 @@ class HardwareBase(object):
         print("Running")
 
     def process(self):
+        
         self.args = self.parser.parse_args()
 
         options = RGBMatrixOptions()
@@ -73,29 +74,73 @@ class HardwareBase(object):
 
         return True
 
+def four_byte_int(data):
+    return int.from_bytes(data,byteorder='little')    
+
 class RunPlayer(HardwareBase):
     def __init__(self, *args, **kwargs):
         super(RunPlayer, self).__init__(*args, **kwargs)
-        self.parser.add_argument("-t", "--text", help="The text to scroll on the RGB LED panel", default="Toy Inspector #5")
+        
+        """
+        self._movies = []
+        
+        # Load the list of movies        
+        with open('a.bin','rb') as mf:
+            _ = mf.read(16)
+            read = 16
+            while True:
+                movie_info = mf.read(16)
+                read += 16
+                if movie_info[0] == 0:
+                    break
+                start_sector = four_byte_int(movie_info[12:16])
+                i = movie_info.index(b'\x00')
+                name = movie_info[0:i]
+                self._movies.append({'name':name,'start_sector':start_sector})
+        
+            mf.read(512-read)
+        
+            mh = mf.read(512)
+            print(mh)
+            cnt = four_byte_int(mh[0:4])
+            delay = four_byte_int(mh[4:8])
+        """    
+            
 
     def run(self):
-        offscreen_canvas = self.matrix.CreateFrameCanvas()
-        font = graphics.Font()
-        font.LoadFont("../../../fonts/7x13.bdf")
-        textColor = graphics.Color(255, 255, 0)
-        pos = offscreen_canvas.width
-        my_text = self.args.text
-
-        while True:
-            offscreen_canvas.Clear()
-            ln = graphics.DrawText(offscreen_canvas, font, pos, 20, textColor, my_text)
-            pos -= 1
-            if (pos + ln < 0):
-                pos = offscreen_canvas.width
-
-            time.sleep(0.05)
-            offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
-
+        
+        while True:        
+            
+            with open('a.bin','rb') as mf:
+                mf.read(512) # List of movies
+                while True:
+                    sec = mf.read(512) # Movie info
+                    cnt = four_byte_int(sec[0:4])
+                    delay = four_byte_int(sec[4:8])
+                    if cnt==0:
+                        break
+                    sec = mf.read(1024) # Colors
+                    colors = []
+                    for i in range(256):
+                        # 00 GG RR BB
+                        g = sec[i*4+2]
+                        r = sec[i*4+1]
+                        b = sec[i*4]                    
+                        colors.append([r,g,b])
+                        #print([r,g,b])
+                    for _ in range(cnt):
+                        sec = mf.read(2048)
+                        offscreen_canvas = self.matrix.CreateFrameCanvas()
+                        for y in range(32):
+                            for x in range(64):
+                                v = sec[y*64+x]
+                                c = colors[v]
+                                #if v!=0:
+                                #    print(c)                            
+                                offscreen_canvas.SetPixel(x,y,c[0],c[1],c[2])
+                        self.matrix.SwapOnVSync(offscreen_canvas)
+                        time.sleep(delay/1000) 
+    
 # Main function
 if __name__ == "__main__":
     run_text = RunPlayer()
