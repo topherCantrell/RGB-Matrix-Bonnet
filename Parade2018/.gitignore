@@ -1,2 +1,6 @@
 /a.bin
 *.pyc
+/orbitGEN.txt
+/snowGEN
+/squaresGEN.txt
+/artGEN.txt
